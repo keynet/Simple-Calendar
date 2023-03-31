@@ -676,11 +676,13 @@ return array_merge( array(
 				$description = $markdown->text( wp_strip_all_tags( $description ) );
 			}
 		} else {
-			$description = wpautop( $description );
+			$description = wp_strip_all_tags( $description ); // keynet replaced	
 		}
-
-		$description = $this->limit_words( $description, $attr['limit'] );
-
+		// $description = $this->limit_words( $description, $attr['limit'] );
+		// Keynet: my version does a line count instead. More useful!
+		$description = $this->limit_lines( $description, $attr['limit'] ); // MOVED
+		$description = wpautop( $description );     //RF BUG ADDED	
+	
 		$html .= $description . '</div>';
 
 		if ( 'no' != $attr['autolink'] ) {
@@ -1074,5 +1076,32 @@ return array_merge( array(
 		$returnvalue = apply_filters( 'simcal_event_tags_do_custom', "", $tag, $partial, $attr, $event );
 
 		return $returnvalue;
+	}
+	
+	/**
+	 * Limit lines in text string - additional function - Keynet.
+	 *
+	 * @since  3.0.0
+	 * @access private
+	 *
+	 * @param  string $text
+	 * @param  int    $limit
+	 *
+	 * @return string
+	 * Thanks to https://stackoverflow.com/questions/2449602/php-how-to-limit-lines-in-a-string
+	 */
+	private function limit_lines( $text, $limit ) {
+
+		$limit = max( absint( $limit ), 0 );
+		if ( $limit > 0 ) {
+		  // Not yet finding HTML breaks, only text - WIP
+		  $lines = preg_split('/(\r\n|\n|\r)/', $text);
+		  $firsts = array_slice($lines, 0, $limit );
+		  $text = implode("\n", $firsts);
+ 		  if (count($lines) > $limit) {
+		    $text .= '&hellip;';
+		  }
+		}
+		return $text;
 	}
 }
